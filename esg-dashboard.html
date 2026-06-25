@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>ESG Dashboard — Philippines</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=IBM+Plex+Mono:wght@300;400;500&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --bg:#080c14;--surface:#0d1420;--surface2:#111a2a;
+  --border:#1e2d45;--text:#e8eef8;--muted:#5a7090;--muted2:#3a5070;
+  --accent:#00c8ff;--green:#00e5a0;--yellow:#f5c842;--red:#ff4d6a;--orange:#ff8c42;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{background:var(--bg);color:var(--text);font-family:'IBM Plex Sans',sans-serif;-webkit-tap-highlight-color:transparent;}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:9999;
+  background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,0,0,0.025) 2px,rgba(0,0,0,0.025) 4px);}
+
+/* ── Topbar ── */
+#topbar{position:sticky;top:0;z-index:100;background:rgba(8,12,20,0.96);backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);padding:0 18px;height:52px;
+  display:flex;align-items:center;justify-content:space-between;}
+.logo{font-family:'Syne',sans-serif;font-size:14px;font-weight:800;letter-spacing:2px;text-transform:uppercase;}
+.logo span{color:var(--accent);}
+.live-badge{display:flex;align-items:center;gap:6px;font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--green);letter-spacing:1px;}
+.live-dot{width:6px;height:6px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(0,229,160,0.4)}50%{opacity:.7;box-shadow:0 0 0 5px rgba(0,229,160,0)}}
+
+/* ── Filter bar ── */
+#filterbar{background:var(--surface);border-bottom:1px solid var(--border);
+  padding:10px 18px;display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+.fg{display:flex;flex-direction:column;gap:3px;}
+.fl{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted2);text-transform:uppercase;}
+select{background:var(--surface2);border:1px solid var(--border);color:var(--text);
+  font-family:'IBM Plex Mono',monospace;font-size:11px;padding:6px 28px 6px 10px;
+  border-radius:4px;outline:none;cursor:pointer;appearance:none;min-width:130px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%235a7090'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 8px center;}
+select:focus{border-color:var(--accent);}
+#filter-result{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);
+  margin-left:auto;align-self:flex-end;padding-bottom:2px;}
+
+/* ── Page ── */
+#page{max-width:680px;margin:0 auto;padding:24px 16px 60px;display:flex;flex-direction:column;gap:28px;}
+
+/* ── Section heading ── */
+.sh{font-family:'IBM Plex Mono',monospace;font-size:8px;font-weight:500;letter-spacing:3px;
+  text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.sh::after{content:"";flex:1;height:1px;background:var(--border);}
+
+/* ── KPI grid ── */
+.kpi-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.kpi{background:var(--surface);border:1px solid var(--border);border-radius:8px;
+  padding:16px;position:relative;overflow:hidden;}
+.kpi::before{content:"";position:absolute;top:0;left:0;right:0;height:2px;}
+.kpi.g::before{background:var(--green);}
+.kpi.b::before{background:var(--accent);}
+.kpi.y::before{background:var(--yellow);}
+.kpi.r::before{background:var(--red);}
+.kl{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:2px;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.kv{font-family:'Syne',sans-serif;font-size:28px;font-weight:800;line-height:1;}
+.ks{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);margin-top:5px;}
+.kd{font-family:'IBM Plex Mono',monospace;font-size:8px;margin-top:3px;}
+.up{color:var(--green);}.dn{color:var(--red);}
+
+/* ── Chart cards ── */
+.cc{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:18px;}
+.ct{font-family:'Syne',sans-serif;font-size:13px;font-weight:700;margin-bottom:3px;}
+.cs{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);letter-spacing:.5px;margin-bottom:14px;}
+.legend{display:flex;gap:14px;flex-wrap:wrap;margin-bottom:10px;}
+.li{display:flex;align-items:center;gap:5px;font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted);}
+.ld{width:7px;height:7px;border-radius:50%;}
+
+/* ── Donut row ── */
+.donut-row{display:flex;align-items:center;gap:20px;}
+.donut-labels{display:flex;flex-direction:column;gap:12px;flex:1;}
+.dlr{display:flex;align-items:center;justify-content:space-between;}
+.dln{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);display:flex;align-items:center;gap:8px;}
+.dlv{font-family:'Syne',sans-serif;font-size:18px;font-weight:700;}
+
+/* ── Pillar bars ── */
+.ps{margin-bottom:16px;}
+.psn{font-family:'IBM Plex Mono',monospace;font-size:8px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:7px;}
+.pr{display:flex;align-items:center;gap:8px;margin-bottom:6px;}
+.pn{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted2);width:76px;}
+.pt{flex:1;height:4px;background:var(--border);border-radius:2px;overflow:hidden;}
+.pf{height:100%;border-radius:2px;transition:width .8s ease;}
+.pv{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--text);width:24px;text-align:right;}
+
+/* ── Risk definition box ── */
+.risk-info{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:14px 16px;
+  font-family:'IBM Plex Sans',sans-serif;font-size:12px;color:var(--muted);line-height:1.6;}
+.risk-info-title{font-family:'Syne',sans-serif;font-size:12px;font-weight:700;color:var(--text);margin-bottom:8px;}
+.risk-def{display:flex;flex-direction:column;gap:6px;margin-top:8px;}
+.rd{display:flex;align-items:flex-start;gap:8px;font-size:11px;}
+.rdt{font-family:'IBM Plex Mono',monospace;font-size:8px;padding:2px 7px;border-radius:2px;text-transform:uppercase;font-weight:500;white-space:nowrap;margin-top:1px;}
+.rdt-l{background:rgba(0,229,160,0.1);color:var(--green);}
+.rdt-m{background:rgba(245,200,66,0.1);color:var(--yellow);}
+.rdt-h{background:rgba(255,77,106,0.1);color:var(--red);}
+
+/* ── Company accordion ── */
+.company-list{display:flex;flex-direction:column;gap:8px;}
+.co-card{background:var(--surface);border:1px solid var(--border);border-radius:8px;overflow:hidden;transition:border-color .2s;}
+.co-card.open{border-color:var(--border2);}
+.co-header{display:flex;align-items:center;padding:14px 16px;cursor:pointer;gap:12px;user-select:none;}
+.co-header:active{background:rgba(255,255,255,0.02);}
+.co-score-big{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;line-height:1;min-width:36px;text-align:center;}
+.co-mid{flex:1;min-width:0;}
+.co-name{font-size:13px;font-weight:500;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.co-ticker{font-family:'IBM Plex Mono',monospace;font-size:9px;color:var(--muted);margin-top:1px;}
+.co-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;}
+.sb{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:.5px;padding:2px 6px;border-radius:2px;text-transform:uppercase;}
+.sb-Banking{background:rgba(0,200,255,0.1);color:var(--accent);}
+.sb-Energy{background:rgba(245,200,66,0.1);color:var(--yellow);}
+.sb-Technology{background:rgba(0,229,160,0.1);color:var(--green);}
+.sb-Telecom{background:rgba(255,140,66,0.1);color:var(--orange);}
+.sb-Property{background:rgba(180,100,255,0.1);color:#b464ff;}
+.sb-Consumer{background:rgba(255,77,106,0.1);color:var(--red);}
+.sb-Mining{background:rgba(160,140,100,0.1);color:#a08c64;}
+.rf{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:7px;letter-spacing:.5px;padding:2px 6px;border-radius:2px;text-transform:uppercase;font-weight:500;}
+.rf-Low{background:rgba(0,229,160,0.1);color:var(--green);}
+.rf-Medium{background:rgba(245,200,66,0.1);color:var(--yellow);}
+.rf-High{background:rgba(255,77,106,0.1);color:var(--red);}
+.chevron{font-size:10px;color:var(--muted);transition:transform .25s;margin-left:4px;}
+.co-card.open .chevron{transform:rotate(180deg);}
+
+/* ── Expanded content ── */
+.co-body{display:none;padding:0 16px 16px;border-top:1px solid var(--border);}
+.co-card.open .co-body{display:block;}
+.co-body-inner{padding-top:14px;display:flex;flex-direction:column;gap:12px;}
+.co-mktcap{font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--muted);}
+.co-mktcap span{color:var(--text);font-weight:500;}
+.co-reason{font-size:11px;color:var(--muted);line-height:1.5;padding:10px 12px;
+  background:var(--surface2);border-radius:6px;border-left:2px solid var(--border2);}
+.pillar-row-inline{display:flex;align-items:center;gap:8px;margin-bottom:7px;}
+.pin{font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted2);width:80px;}
+.pit{flex:1;height:5px;background:var(--border);border-radius:2px;overflow:hidden;}
+.pif{height:100%;border-radius:2px;}
+.piv{font-family:'IBM Plex Mono',monospace;font-size:10px;width:24px;text-align:right;}
+
+/* ── No results ── */
+.no-results{text-align:center;padding:32px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);}
+
+/* ── Source bar ── */
+#sourcebar{background:var(--surface);border-top:1px solid var(--border);
+  padding:10px 18px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;
+  font-family:'IBM Plex Mono',monospace;font-size:8px;color:var(--muted2);letter-spacing:.3px;}
+.src{display:flex;align-items:center;gap:4px;}
+.sdot{width:4px;height:4px;border-radius:50%;background:var(--accent);}
+
+/* ── Animations ── */
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.kpi,.cc,.co-card{animation:fadeUp .35s ease forwards;opacity:0;}
+.kpi:nth-child(1){animation-delay:.05s}.kpi:nth-child(2){animation-delay:.1s}
+.kpi:nth-child(3){animation-delay:.15s}.kpi:nth-child(4){animation-delay:.2s}
+</style>
+</head>
+<body>
+
+<div id="topbar">
+  <div class="logo">ESG <span>Dashboard</span></div>
+  <div class="live-badge"><div class="live-dot"></div>LIVE · <span id="ts" style="color:var(--muted);margin-left:4px;"></span></div>
+</div>
+
+<div id="filterbar">
+  <div class="fg">
+    <div class="fl">Sector</div>
+    <select id="f-sector" onchange="applyFilters()">
+      <option value="all">All Sectors</option>
+      <option value="Banking">Banking</option>
+      <option value="Energy">Energy</option>
+      <option value="Technology">Technology</option>
+      <option value="Telecom">Telecom</option>
+      <option value="Property">Property</option>
+      <option value="Consumer">Consumer</option>
+      <option value="Mining">Mining</option>
+    </select>
+  </div>
+  <div class="fg">
+    <div class="fl">Risk Level</div>
+    <select id="f-risk" onchange="applyFilters()">
+      <option value="all">All Risk Levels</option>
+      <option value="Low">Low Risk</option>
+      <option value="Medium">Medium Risk</option>
+      <option value="High">High Risk</option>
+    </select>
+  </div>
+  <div id="filter-result">🇵🇭 Philippines (PSE) · USD</div>
+</div>
+
+<div id="page">
+
+  <!-- KPIs -->
+  <div>
+    <div class="sh">Market Overview</div>
+    <div class="kpi-grid">
+      <div class="kpi g"><div class="kl">Avg ESG Score</div><div class="kv" id="kpi-avg">—</div><div class="ks">PSE-listed companies</div><div class="kd up">▲ +2.1 vs last year</div></div>
+      <div class="kpi b"><div class="kl">Companies Tracked</div><div class="kv" id="kpi-count">—</div><div class="ks">Across 7 sectors</div><div class="kd up">▲ +3 new this quarter</div></div>
+      <div class="kpi y"><div class="kl">Medium Risk</div><div class="kv" id="kpi-med">—</div><div class="ks">Require monitoring</div><div class="kd up">▼ improving</div></div>
+      <div class="kpi r"><div class="kl">High Risk</div><div class="kv" id="kpi-high">—</div><div class="ks">Flagged for review</div><div class="kd dn">▲ unchanged</div></div>
+    </div>
+  </div>
+
+  <!-- Trend -->
+  <div class="cc">
+    <div class="ct">ESG Score Trend — Philippines</div>
+    <div class="cs">2019 – 2024 · MARKET AVERAGE BY PILLAR</div>
+    <div class="legend" id="trend-legend"></div>
+    <div id="trend-chart"></div>
+  </div>
+
+  <!-- Risk distribution -->
+  <div class="cc">
+    <div class="ct">Risk Distribution</div>
+    <div class="cs">HOW MANY COMPANIES FALL INTO EACH RISK LEVEL</div>
+    <div class="donut-row">
+      <div id="risk-donut"></div>
+      <div class="donut-labels" id="donut-labels"></div>
+    </div>
+  </div>
+
+  <!-- What is risk level -->
+  <div class="risk-info">
+    <div class="risk-info-title">📖 What does Risk Level mean?</div>
+    ESG Risk Level reflects how exposed a company is to environmental, social, and governance risks that could affect its long-term financial performance or reputation.
+    <div class="risk-def">
+      <div class="rd"><span class="rdt rdt-l">Low</span>Strong ESG practices. Minimal regulatory, reputational, or operational risk from ESG factors.</div>
+      <div class="rd"><span class="rdt rdt-m">Medium</span>Some ESG concerns present. Requires monitoring — risks are manageable but not resolved.</div>
+      <div class="rd"><span class="rdt rdt-h">High</span>Significant ESG vulnerabilities — environmental violations, governance gaps, or labor issues that pose material risk to investors.</div>
+    </div>
+  </div>
+
+  <!-- Pillar breakdown -->
+  <div class="cc">
+    <div class="ct">ESG Pillar Breakdown by Sector</div>
+    <div class="cs">AVERAGE ENVIRONMENTAL · SOCIAL · GOVERNANCE · 2024</div>
+    <div id="pillar-chart"></div>
+  </div>
+
+  <!-- Companies -->
+  <div>
+    <div class="sh">Companies <span style="font-size:9px;letter-spacing:1px;" id="co-count-label"></span></div>
+    <div class="company-list" id="company-list"></div>
+    <div class="no-results" id="no-results" style="display:none;">No companies match the selected filters.</div>
+  </div>
+
+</div>
+
+<div id="sourcebar">
+  <span style="color:var(--muted);margin-right:2px;">SOURCES:</span>
+  <div class="src"><div class="sdot"></div>World Bank Governance Indicators</div>
+  <div class="src"><div class="sdot"></div>IFC Sustainability Framework</div>
+  <div class="src"><div class="sdot"></div>PSE Disclosure Reports 2024</div>
+  <div class="src"><div class="sdot"></div>UN SDG Corporate Data</div>
+  <div class="src"><div class="sdot"></div>SEC Philippines Annual Reports</div>
+  <div style="margin-left:auto;">Scores 0–100 · USD via BSP rate</div>
+</div>
+
+<script>
+const DATA=[
+  {name:"BDO Unibank",ticker:"BDO",sector:"Banking",env:58,soc:72,gov:81,mktcap:"$8.2B",risk:"Low",reason:"Strong governance framework with improving social scores. Active sustainable finance initiatives aligned with BSP green lending guidelines."},
+  {name:"Bank of the Phil. Islands",ticker:"BPI",sector:"Banking",env:61,soc:74,gov:83,mktcap:"$7.1B",risk:"Low",reason:"Robust ESG reporting standards and board diversity initiatives. One of the strongest governance scores among Philippine banks."},
+  {name:"Metrobank",ticker:"MBT",sector:"Banking",env:52,soc:68,gov:76,mktcap:"$5.4B",risk:"Low",reason:"Consistent governance practices and moderate environmental exposure. Expanding green loan portfolio."},
+  {name:"Security Bank",ticker:"SECB",sector:"Banking",env:53,soc:67,gov:75,mktcap:"$1.4B",risk:"Low",reason:"Growing ESG integration in lending decisions. Smaller balance sheet limits scale of sustainability programs."},
+  {name:"SM Investments",ticker:"SM",sector:"Consumer",env:55,soc:70,gov:74,mktcap:"$14.8B",risk:"Low",reason:"Diversified holdings with improving ESG disclosure. SM's retail and mall operations have active energy efficiency programs."},
+  {name:"Ayala Corporation",ticker:"AC",sector:"Property",env:63,soc:75,gov:85,mktcap:"$6.9B",risk:"Low",reason:"Market leader in ESG transparency among Philippine conglomerates. Strong governance and active renewable energy investments through ACEN."},
+  {name:"PLDT Inc.",ticker:"TEL",sector:"Telecom",env:50,soc:73,gov:79,mktcap:"$4.6B",risk:"Low",reason:"Strong social scores driven by digital inclusion programs. E-waste policy and Scope 2 emissions reduction need strengthening."},
+  {name:"Globe Telecom",ticker:"GLO",sector:"Telecom",env:54,soc:71,gov:77,mktcap:"$3.8B",risk:"Low",reason:"Progressive ESG targets with renewable energy commitments. Science-based targets aligned with Paris Agreement."},
+  {name:"Converge ICT",ticker:"CNVRG",sector:"Technology",env:52,soc:66,gov:72,mktcap:"$1.5B",risk:"Low",reason:"Digital infrastructure provider with moderate ESG maturity. Newer company still building out formal ESG frameworks."},
+  {name:"Integrated Micro-Electronics",ticker:"IMI",sector:"Technology",env:55,soc:69,gov:74,mktcap:"$0.6B",risk:"Low",reason:"Electronics manufacturing with strong labor compliance. RoHS and REACH chemical compliance in place."},
+  {name:"JG Summit Holdings",ticker:"JGS",sector:"Consumer",env:44,soc:62,gov:70,mktcap:"$5.1B",risk:"Medium",reason:"Environmental exposure from petrochemical and airline operations. Emissions reduction targets exist but progress is slow."},
+  {name:"Robinsons Land",ticker:"RLC",sector:"Property",env:49,soc:63,gov:71,mktcap:"$2.0B",risk:"Medium",reason:"Green building initiatives partially offset by land use and urban sprawl concerns. LEED certifications in progress."},
+  {name:"Aboitiz Equity Ventures",ticker:"AEV",sector:"Energy",env:41,soc:65,gov:73,mktcap:"$3.3B",risk:"Medium",reason:"Mixed energy portfolio — renewables growing but coal still represents significant capacity. Transition risk is elevated."},
+  {name:"Int'l Container Terminal",ticker:"ICT",sector:"Consumer",env:38,soc:58,gov:68,mktcap:"$3.7B",risk:"Medium",reason:"Port operations generate significant emissions. Labor standards improving but supply chain transparency remains limited."},
+  {name:"Alliance Global Group",ticker:"AGI",sector:"Consumer",env:42,soc:61,gov:67,mktcap:"$1.8B",risk:"Medium",reason:"Real estate and gaming exposure creates governance scrutiny. ESG disclosure quality lags behind peers."},
+  {name:"Emperador Inc.",ticker:"EMP",sector:"Consumer",env:40,soc:57,gov:65,mktcap:"$2.9B",risk:"Medium",reason:"Alcohol sector faces inherent social risk. Water usage in distilling operations is a key environmental concern."},
+  {name:"Meralco",ticker:"MER",sector:"Energy",env:35,soc:60,gov:72,mktcap:"$4.2B",risk:"High",reason:"High carbon intensity driven by coal dependency. Significant stranded asset risk as the grid transitions to renewables. Regulatory exposure is elevated."},
+  {name:"Pilipinas Shell",ticker:"SHLPH",sector:"Energy",env:33,soc:59,gov:70,mktcap:"$0.9B",risk:"High",reason:"Refining operations generate high Scope 1 emissions. Long-term business model faces disruption from energy transition."},
+  {name:"DMCI Holdings",ticker:"DMC",sector:"Mining",env:28,soc:55,gov:64,mktcap:"$2.4B",risk:"High",reason:"Mining and construction exposure with weak environmental scores. Tailings management and land rehabilitation are ongoing concerns."},
+  {name:"Semirara Mining",ticker:"SCC",sector:"Mining",env:22,soc:48,gov:58,mktcap:"$2.1B",risk:"High",reason:"Coal extraction is the core business. Lowest environmental score in the dataset. Faces existential transition risk and labor concerns."},
+];
+DATA.forEach(c=>{c.esg=Math.round((c.env+c.soc+c.gov)/3);});
+
+let filtered=[...DATA];
+
+function updateTS(){document.getElementById("ts").textContent=new Date().toLocaleString("en-US",{month:"short",day:"numeric",year:"numeric",hour:"2-digit",minute:"2-digit"})+" PHT";}
+updateTS();setInterval(updateTS,60000);
+
+function sc(v){return v>=70?"var(--green)":v>=50?"var(--yellow)":"var(--red)";}
+
+function applyFilters(){
+  const sec=document.getElementById("f-sector").value;
+  const risk=document.getElementById("f-risk").value;
+  filtered=DATA.filter(c=>(sec==="all"||c.sector===sec)&&(risk==="all"||c.risk===risk));
+  document.getElementById("filter-result").textContent=
+    sec==="all"&&risk==="all"?"🇵🇭 Philippines (PSE) · USD":`Showing ${filtered.length} of ${DATA.length} companies`;
+  renderKPIs();renderDonut();renderPillar();renderCompanies();
+}
+
+function renderKPIs(){
+  const avg=filtered.length?Math.round(filtered.reduce((a,b)=>a+b.esg,0)/filtered.length):0;
+  document.getElementById("kpi-avg").textContent=avg;
+  document.getElementById("kpi-count").textContent=filtered.length;
+  document.getElementById("kpi-med").textContent=filtered.filter(c=>c.risk==="Medium").length;
+  document.getElementById("kpi-high").textContent=filtered.filter(c=>c.risk==="High").length;
+}
+
+function renderTrend(){
+  const years=["2019","2020","2021","2022","2023","2024"];
+  const series=[
+    {label:"Environmental",color:"var(--green)",data:[38,39,41,43,46,48]},
+    {label:"Social",color:"var(--accent)",data:[54,55,57,60,63,65]},
+    {label:"Governance",color:"var(--yellow)",data:[62,63,65,68,71,73]},
+  ];
+  const W=600,H=150,pL=32,pR=12,pT=8,pB=24,min=30,max=80;
+  const xS=(W-pL-pR)/(years.length-1),yS=(H-pT-pB)/(max-min);
+  let svg=`<svg viewBox="0 0 ${W} ${H}" style="width:100%;overflow:visible;">`;
+  [30,40,50,60,70,80].forEach(v=>{
+    const y=H-pB-(v-min)*yS;
+    svg+=`<line x1="${pL}" y1="${y}" x2="${W-pR}" y2="${y}" stroke="var(--border)" stroke-width="1"/>
+    <text x="${pL-5}" y="${y+3}" text-anchor="end" font-family="IBM Plex Mono" font-size="7" fill="var(--muted2)">${v}</text>`;
+  });
+  years.forEach((yr,i)=>{
+    svg+=`<text x="${pL+i*xS}" y="${H-2}" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="var(--muted2)">${yr}</text>`;
+  });
+  series.forEach(s=>{
+    const pts=s.data.map((v,i)=>[pL+i*xS,H-pB-(v-min)*yS]);
+    const path=pts.map((p,i)=>`${i===0?"M":"L"}${p[0]},${p[1]}`).join(" ");
+    svg+=`<path d="${path} L${pts[pts.length-1][0]},${H-pB} L${pts[0][0]},${H-pB} Z" fill="${s.color}" opacity="0.07"/>`;
+    svg+=`<path d="${path}" fill="none" stroke="${s.color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>`;
+    pts.forEach(([x,y])=>{svg+=`<circle cx="${x}" cy="${y}" r="2.5" fill="${s.color}" stroke="var(--surface)" stroke-width="1.5"/>`;});
+  });
+  document.getElementById("trend-chart").innerHTML=svg+"</svg>";
+  document.getElementById("trend-legend").innerHTML=series.map(s=>`<div class="li"><div class="ld" style="background:${s.color}"></div>${s.label}</div>`).join("");
+}
+
+function renderDonut(){
+  const low=filtered.filter(c=>c.risk==="Low").length;
+  const med=filtered.filter(c=>c.risk==="Medium").length;
+  const high=filtered.filter(c=>c.risk==="High").length;
+  const total=filtered.length||1;
+  const cx=70,cy=70,r=52,sw=13,circ=2*Math.PI*r;
+  const segs=[{n:"Low",v:low,c:"var(--green)"},{n:"Medium",v:med,c:"var(--yellow)"},{n:"High",v:high,c:"var(--red)"}];
+  let off=0,svgSegs="";
+  segs.forEach(s=>{
+    const d=(s.v/total)*circ;
+    svgSegs+=`<circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="${s.c}" stroke-width="${sw}"
+      stroke-dasharray="${d} ${circ-d}" stroke-dashoffset="${-off}" transform="rotate(-90 ${cx} ${cy})" opacity="0.85"/>`;
+    off+=d;
+  });
+  document.getElementById("risk-donut").innerHTML=`<svg width="140" height="140" viewBox="0 0 140 140">
+    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="var(--border)" stroke-width="${sw}"/>
+    ${svgSegs}
+    <text x="${cx}" y="${cy-4}" text-anchor="middle" font-family="Syne" font-size="22" font-weight="800" fill="var(--text)">${total}</text>
+    <text x="${cx}" y="${cy+12}" text-anchor="middle" font-family="IBM Plex Mono" font-size="7" fill="var(--muted)" letter-spacing="1">COMPANIES</text>
+  </svg>`;
+  document.getElementById("donut-labels").innerHTML=segs.map(s=>`
+    <div class="dlr">
+      <div class="dln"><div class="ld" style="background:${s.c};width:7px;height:7px;border-radius:50%;"></div>${s.n} Risk</div>
+      <div class="dlv" style="color:${s.c}">${s.v}</div>
+    </div>`).join("");
+}
+
+function renderPillar(){
+  const sectors=[...new Set(filtered.map(c=>c.sector))];
+  document.getElementById("pillar-chart").innerHTML=sectors.map(sec=>{
+    const cos=filtered.filter(c=>c.sector===sec);
+    const e=Math.round(cos.reduce((a,b)=>a+b.env,0)/cos.length);
+    const s=Math.round(cos.reduce((a,b)=>a+b.soc,0)/cos.length);
+    const g=Math.round(cos.reduce((a,b)=>a+b.gov,0)/cos.length);
+    return `<div class="ps">
+      <div class="psn">${sec}</div>
+      <div class="pr"><span class="pn">Environmental</span><div class="pt"><div class="pf" style="width:${e}%;background:var(--green)"></div></div><span class="pv">${e}</span></div>
+      <div class="pr"><span class="pn">Social</span><div class="pt"><div class="pf" style="width:${s}%;background:var(--accent)"></div></div><span class="pv">${s}</span></div>
+      <div class="pr"><span class="pn">Governance</span><div class="pt"><div class="pf" style="width:${g}%;background:var(--yellow)"></div></div><span class="pv">${g}</span></div>
+    </div>`;
+  }).join("");
+}
+
+function renderCompanies(){
+  const list=document.getElementById("company-list");
+  const none=document.getElementById("no-results");
+  const label=document.getElementById("co-count-label");
+  label.textContent=`— ${filtered.length} COMPANIES`;
+  if(!filtered.length){list.innerHTML="";none.style.display="block";return;}
+  none.style.display="none";
+  // sort by ESG desc by default
+  const sorted=[...filtered].sort((a,b)=>b.esg-a.esg);
+  list.innerHTML=sorted.map((c,i)=>`
+    <div class="co-card" id="co-${i}" style="animation-delay:${0.05+i*0.03}s">
+      <div class="co-header" onclick="toggleCard(${i})">
+        <div class="co-score-big" style="color:${sc(c.esg)}">${c.esg}</div>
+        <div class="co-mid">
+          <div class="co-name">${c.name}</div>
+          <div class="co-ticker">${c.ticker}</div>
+        </div>
+        <div class="co-right">
+          <span class="sb sb-${c.sector}">${c.sector}</span>
+          <span class="rf rf-${c.risk}">${c.risk}</span>
+        </div>
+        <div class="chevron">▼</div>
+      </div>
+      <div class="co-body">
+        <div class="co-body-inner">
+          <div>
+            <div class="pillar-row-inline"><span class="pin">Environmental</span><div class="pit"><div class="pif" style="width:${c.env}%;background:var(--green)"></div></div><span class="piv" style="color:var(--green)">${c.env}</span></div>
+            <div class="pillar-row-inline"><span class="pin">Social</span><div class="pit"><div class="pif" style="width:${c.soc}%;background:var(--accent)"></div></div><span class="piv" style="color:var(--accent)">${c.soc}</span></div>
+            <div class="pillar-row-inline"><span class="pin">Governance</span><div class="pit"><div class="pif" style="width:${c.gov}%;background:var(--yellow)"></div></div><span class="piv" style="color:var(--yellow)">${c.gov}</span></div>
+          </div>
+          <div class="co-mktcap">Market Cap: <span>${c.mktcap}</span></div>
+          <div class="co-reason">${c.reason}</div>
+        </div>
+      </div>
+    </div>`).join("");
+}
+
+function toggleCard(i){
+  const card=document.getElementById("co-"+i);
+  card.classList.toggle("open");
+}
+
+// Init
+applyFilters();
+renderTrend();
+</script>
+</body>
+</html>
